@@ -1,11 +1,11 @@
 import sys
+import tempfile
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-import tempfile
 import streamlit as st
 from PIL import Image
 
@@ -27,30 +27,37 @@ def save_uploaded_image_temporarily(uploaded_file) -> str:
         return temp_file.name
 
 
-def main() -> None:
+def render_header() -> None:
     st.title("🦮 Assistive Vision Agent")
     st.caption("A safe multi-agent assistant for visually impaired users.")
-
     st.markdown(
-        """
-        This demo can describe images, read visible text, and provide safety-aware,
-        voice-friendly responses.
-        """
+        "This demo can describe images, read visible text, and provide "
+        "safety-aware, voice-friendly responses."
     )
+
+
+def main() -> None:
+    render_header()
 
     uploaded_file = st.file_uploader(
         "Upload an image",
         type=["jpg", "jpeg", "png", "webp"],
         help="Upload a scene, sign, label, receipt, or document image.",
+        key="image_upload",
     )
 
     prompt = st.text_area(
         "What would you like help with?",
         value="Describe this image",
         placeholder="Examples: Describe this image, Read this sign, Where is my phone?",
+        key="user_prompt",
     )
 
-    run_button = st.button("Analyze image", type="primary")
+    run_button = st.button(
+        "Analyze image",
+        type="primary",
+        key="analyze_button",
+    )
 
     if uploaded_file is not None:
         st.image(
@@ -94,10 +101,8 @@ def main() -> None:
     st.divider()
 
     st.markdown(
-        """
-        **Safety notice:** This assistant does not replace professional medical,
-        legal, financial, emergency, or navigation support.
-        """
+        "**Safety notice:** This assistant does not replace professional medical, "
+        "legal, financial, emergency, or navigation support."
     )
 
 
