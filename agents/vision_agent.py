@@ -1,5 +1,8 @@
+import logging
 from agents.gemini_vision_client import GeminiVisionClient
 from agents.models import UserRequest, VisionFinding
+
+logger = logging.getLogger(__name__)
 
 
 class VisionAgent:
@@ -49,10 +52,11 @@ Rules:
                 prompt=gemini_prompt,
             )
         except Exception as exc:
+            logger.exception("Gemini vision analysis failed")
             fallback = self._fallback_analyze(request)
             fallback.uncertainty = (
-                "Gemini vision failed, so I used the local prototype fallback. "
-                f"Reason: {exc}"
+                "Gemini is temporarily unavailable, so I used the safe local fallback. "
+                "Please try again later for live image analysis."
             )
             return fallback
 
@@ -74,8 +78,7 @@ Rules:
                 spatial_details=["Some objects may be on the surface."],
                 possible_hazards=[],
                 uncertainty=(
-                    "This is a prototype response. Real image understanding "
-                    "will be used when GOOGLE_API_KEY is configured."
+                    "This is a prototype response. Live image analysis is not currently active."
                 ),
             )
 
@@ -88,7 +91,7 @@ Rules:
                 ],
                 possible_hazards=[],
                 uncertainty=(
-                    "This prototype cannot truly inspect the image without GOOGLE_API_KEY."
+                    "This prototype cannot truly inspect the image without live analysis active."
                 ),
             )
 
@@ -98,6 +101,6 @@ Rules:
             spatial_details=[],
             possible_hazards=[],
             uncertainty=(
-                "This prototype cannot truly inspect the image without GOOGLE_API_KEY."
+                "This prototype cannot truly inspect the image without live analysis active."
             ),
         )

@@ -1,5 +1,8 @@
+import logging
 from agents.gemini_vision_client import GeminiVisionClient
 from agents.models import OCRFinding, UserRequest
+
+logger = logging.getLogger(__name__)
 
 
 class OCRAgent:
@@ -51,10 +54,11 @@ Rules:
                 prompt=gemini_prompt,
             )
         except Exception as exc:
+            logger.exception("Gemini OCR analysis failed")
             fallback = self._fallback_analyze(request)
             fallback.uncertainty = (
-                "Gemini OCR failed, so I used the local prototype fallback. "
-                f"Reason: {exc}"
+                "Gemini is temporarily unavailable, so I used the safe local fallback. "
+                "Please try again later for live text reading."
             )
             return fallback
 
@@ -99,8 +103,8 @@ Rules:
                 summary="The text provides dosage instructions.",
                 important_values=["one tablet", "daily", "after food"],
                 uncertainty=(
-                    "This is prototype text. Real OCR will be used when GOOGLE_API_KEY "
-                    "is configured."
+                    "This is prototype text. Live OCR will be used when live analysis "
+                    "is active."
                 ),
             )
 
@@ -110,8 +114,8 @@ Rules:
                 summary="The text shows a receipt total.",
                 important_values=["$12.50"],
                 uncertainty=(
-                    "This is prototype text. Real OCR will be used when GOOGLE_API_KEY "
-                    "is configured."
+                    "This is prototype text. Live OCR will be used when live analysis "
+                    "is active."
                 ),
             )
 
@@ -121,8 +125,8 @@ Rules:
                 summary="The text is a short sign.",
                 important_values=["Exit"],
                 uncertainty=(
-                    "This is prototype text. Real OCR will be used when GOOGLE_API_KEY "
-                    "is configured."
+                    "This is prototype text. Live OCR will be used when live analysis "
+                    "is active."
                 ),
             )
 
@@ -131,6 +135,6 @@ Rules:
             summary="No readable text detected.",
             important_values=[],
             uncertainty=(
-                "This prototype cannot truly inspect image text without GOOGLE_API_KEY."
+                "This prototype cannot truly inspect image text without live analysis active."
             ),
         )

@@ -54,3 +54,26 @@ def test_ocr_agent_handles_no_text_stub():
 
     assert result.visible_text == ""
     assert "No readable text" in result.summary
+
+
+def test_ocr_agent_handles_gemini_exception_gracefully(monkeypatch):
+    from agents.gemini_vision_client import GeminiVisionClient
+    monkeypatch.setattr(GeminiVisionClient, "is_available", lambda self: True)
+
+    def mock_analyze_image(self, image_path, prompt):
+        raise RuntimeError("API error 503 Service Unavailable")
+    monkeypatch.setattr(GeminiVisionClient, "analyze_image", mock_analyze_image)
+
+    agent = OCRAgent()
+    result = agent.analyze(
+        UserRequest(
+            prompt="Read this medicine label.",
+            image_path="medicine-label.jpg",
+        )
+    )
+
+    assert "Take one tablet" in result.visible_text
+    assert result.uncertainty == (
+        "Gemini is temporarily unavailable, so I used the safe local fallback. "
+        "Please try again later for live text reading."
+    )
