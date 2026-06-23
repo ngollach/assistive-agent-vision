@@ -1,0 +1,42 @@
+# Assistive Agent for Visually Impaired Users
+
+## Track
+Agents for Good
+
+## Problem
+Visually impaired users need safe, accessible assistance for understanding images, reading text, and completing everyday tasks.
+
+## Goal
+Build a multi-agent AI assistant using Antigravity and ADK that can describe scenes, read visible text, answer user questions, and provide safe task guidance.
+
+## Main Features
+1. Scene description from uploaded images.
+2. OCR/text reading from labels, signs, documents, or screenshots.
+3. Object and environment explanation.
+4. Safety-aware response generation.
+5. Voice-friendly concise answers.
+6. Human-in-the-loop confirmation for risky tasks.
+7. Logging and evaluation.
+
+## Agents
+1. Orchestrator Agent
+2. Vision Agent
+3. OCR Agent
+4. Safety Agent
+5. Task Guidance Agent
+6. Response Agent
+
+## Skills
+1. scene-description
+2. text-reading
+3. accessibility-response
+4. safety-check
+
+## Security
+1. No medical, legal, or navigation-critical decisions without warning.
+2. No saving private images unless user confirms.
+3. Least-privilege MCP access.
+4. Logs for evaluation.
+
+## Output
+Clear, short, accessible response suitable for screen readers or voice assistants.

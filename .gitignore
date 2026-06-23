@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Environment
+.env
+
+# Logs
+logs/*
+!logs/.gitkeep
+
+# Local files
+.DS_Store
+
+# Generated files
+outputs/
