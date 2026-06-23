@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Live Assist Vision Agent</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 16px;
+            background: #111827;
+            color: white;
+        }
+
+        main {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.7rem;
+            margin-bottom: 8px;
+        }
+
+        .notice {
+            background: #1f2937;
+            border-left: 4px solid #f59e0b;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            line-height: 1.4;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 12px;
+            background: black;
+            margin-top: 12px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 10px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #startBtn {
+            background: #10b981;
+            color: white;
+        }
+
+        #stopBtn {
+            background: #ef4444;
+            color: white;
+        }
+
+        #analyzeNowBtn {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .card {
+            background: #1f2937;
+            padding: 14px;
+            border-radius: 12px;
+            margin-top: 12px;
+        }
+
+        .risk-low {
+            color: #34d399;
+        }
+
+        .risk-medium {
+            color: #fbbf24;
+        }
+
+        .risk-high {
+            color: #f87171;
+        }
+
+        .small {
+            font-size: 0.9rem;
+            color: #d1d5db;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>🦮 Live Assist Vision Agent</h1>
+
+        <p class="small">
+            Live camera demo for visually impaired users. The assistant periodically analyzes camera frames and speaks
+            short safety-aware descriptions.
+        </p>
+
+        <div class="notice">
+            <strong>Safety notice:</strong>
+            This is a prototype demo, not a certified navigation aid. Do not rely on it as your only source of guidance
+            while walking. Use a cane, guide dog, trusted helper, or professional mobility support.
+        </div>
+
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+
+        <button id="startBtn">Start Live Assist</button>
+        <button id="stopBtn" disabled>Stop Live Assist</button>
+        <button id="analyzeNowBtn" disabled>Analyze Now</button>
+
+        <div class="card">
+            <h2>Latest Guidance</h2>
+            <p id="status">Camera not started.</p>
+            <p id="answer"></p>
+            <p id="risk"></p>
+            <p id="uncertainty"></p>
+        </div>
+
+        <div class="card small">
+            <strong>Privacy:</strong>
+            Frames are captured for analysis and sent to your local backend. The app deletes temporary frame files after
+            each request. Logs store metadata and final responses, not raw image contents.
+        </div>
+    </main>
+
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn = document.getElementById("stopBtn");
+        const analyzeNowBtn = document.getElementById("analyzeNowBtn");
+
+        const statusText = document.getElementById("status");
+        const answerText = document.getElementById("answer");
+        const riskText = document.getElementById("risk");
+        const uncertaintyText = document.getElementById("uncertainty");
+
+        let stream = null;
+        let intervalId = null;
+        let isAnalyzing = false;
+
+        const ANALYSIS_INTERVAL_MS = 5000;
+
+        function speak(text) {
+            if (!("speechSynthesis" in window)) {
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: "environment"
+                    },
+                    audio: false
+                });
+
+                video.srcObject = stream;
+
+                statusText.textContent = "Live Assist started. Analyzing every few seconds.";
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                analyzeNowBtn.disabled = false;
+
+                speak("Live Assist started. Please move slowly and verify your surroundings.");
+
+                intervalId = setInterval(analyzeFrame, ANALYSIS_INTERVAL_MS);
+
+            } catch (error) {
+                statusText.textContent = "Could not access camera. Please allow camera permission.";
+                speak("Could not access camera. Please allow camera permission.");
+            }
+        }
+
+        function stopCamera() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+
+            video.srcObject = null;
+            statusText.textContent = "Live Assist stopped.";
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            analyzeNowBtn.disabled = true;
+
+            speak("Live Assist stopped.");
+        }
+
+        function captureFrame() {
+            const width = video.videoWidth || 640;
+            const height = video.videoHeight || 480;
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const context = canvas.getContext("2d");
+            context.drawImage(video, 0, 0, width, height);
+
+            return canvas.toDataURL("image/jpeg", 0.8);
+        }
+
+        async function analyzeFrame() {
+            if (!stream || isAnalyzing) {
+                return;
+            }
+
+            isAnalyzing = true;
+            statusText.textContent = "Analyzing current frame...";
+
+            try {
+                const imageBase64 = captureFrame();
+
+                const response = await fetch("/analyze-frame", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        image_base64: imageBase64
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Analysis failed.");
+                }
+
+                answerText.textContent = data.answer || "No response.";
+                riskText.textContent = "Risk level: " + data.risk_level;
+                riskText.className = "risk-" + data.risk_level;
+
+                uncertaintyText.textContent = data.uncertainty
+                    ? "Uncertainty: " + data.uncertainty
+                    : "";
+
+                statusText.textContent = "Latest frame analyzed.";
+
+                const spoken = data.answer || "I could not analyze this frame.";
+                speak(spoken);
+
+            } catch (error) {
+                statusText.textContent = "Analysis error: " + error.message;
+                speak("Analysis error. Please try again.");
+            } finally {
+                isAnalyzing = false;
+            }
+        }
+
+        startBtn.addEventListener("click", startCamera);
+        stopBtn.addEventListener("click", stopCamera);
+        analyzeNowBtn.addEventListener("click", analyzeFrame);
+    </script>
+</body>
+
+</html>

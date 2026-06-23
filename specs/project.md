@@ -113,6 +113,39 @@ All external tools should use least-privilege access. Write actions require user
 7. Use read-only access wherever possible.
 8. Log agent actions for evaluation, but do not log sensitive image contents unnecessarily.
 
+## Live Assist Mode
+
+The project includes an optional Live Assist Mode for demo purposes.
+
+Live Assist Mode uses the user's browser camera to periodically capture image frames, analyze them with the multi-agent system, and return short voice-friendly guidance.
+
+### Live Assist Features
+1. Start and stop live camera analysis.
+2. Capture one frame every few seconds.
+3. Analyze the frame using the Orchestrator Agent.
+4. Speak the response using browser text-to-speech.
+5. Display the latest response and risk level.
+6. Avoid storing video or image contents permanently.
+7. Log only metadata, safety decisions, uncertainty, and final response.
+
+### Live Assist Safety Rules
+1. The assistant must not guarantee that walking or navigation is safe.
+2. The assistant must not say "go forward", "cross now", or "the path is clear" as a certainty.
+3. The assistant may say cautious descriptions such as:
+   - "I see a possible obstacle ahead."
+   - "There appears to be a chair in front of you."
+   - "Please slow down and verify with touch or another trusted method."
+4. The assistant must recommend stopping or asking for human help if the scene appears risky or unclear.
+5. The assistant must clearly communicate uncertainty.
+6. The assistant must not replace a cane, guide dog, caregiver, emergency service, or professional mobility support.
+7. The assistant must not identify people by name or infer sensitive personal attributes.
+8. The assistant must not continuously record or store video.
+9. The user must manually start Live Assist Mode.
+10. The user must be able to stop Live Assist Mode at any time.
+
+### Live Assist Demo Limitation
+Live Assist Mode is a prototype demonstration. It is not a certified navigation aid and should not be used as the only source of guidance while walking in real environments.
+
 ## Human-in-the-Loop Rules
 The assistant must ask for confirmation before:
 - Saving user images

@@ -5,3 +5,6 @@ pydantic
 pytest
 Pillow
 streamlit
+fastapi
+uvicorn
+python-multipart

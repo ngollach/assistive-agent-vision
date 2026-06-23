@@ -47,6 +47,19 @@ The assistant must:
 - Recommend human verification for high-risk situations.
 - Never identify people by name from images.
 
+## Live Assist Development Rules
+When implementing live camera or audio features:
+
+- Treat the feature as a prototype demo, not a certified navigation system.
+- Do not produce language that guarantees physical safety.
+- Do not instruct the user to cross roads, walk into traffic, or move quickly.
+- Prefer cautious language: "possible obstacle", "appears to be", "please verify".
+- Always allow the user to start and stop the camera.
+- Do not store video frames permanently.
+- Do not log image contents.
+- Keep frame analysis rate limited to avoid cost, latency, and noisy guidance.
+- Use browser text-to-speech for demo audio output.
+
 ## Required Agents
 The system should include:
 
